@@ -68,7 +68,6 @@
       pointer-events: none;
     }
 
-    /* 手机端适配 */
     @media (max-width: 768px) {
       .tip-card {
         width: 210px;
@@ -206,7 +205,7 @@
       heartIndex = (heartIndex + HEART_STEP) % heartPoints.length;
 
       const jitterX = randomHelper.randint(-HEART_JITTER, HEART_JITTER);
-      thedconst jitterY = randomHelper.randint(-HEART_JITTER, HEART_JITTER);
+      const jitterY = randomHelper.randint(-HEART_JITTER, HEART_JITTER);
       const xMin = WINDOW_SIZE.width / 2;
       const xMax = window.innerWidth - WINDOW_SIZE.width / 2;
       const yMin = WINDOW_SIZE.height / 2;
