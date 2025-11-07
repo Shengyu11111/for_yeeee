@@ -2,9 +2,10 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <link rel="icon" href="cat.ico" type="image/x-icon" />
   <link rel="icon" href="cat.jpg" type="image/jpeg" />
-  <title>送给 yee </title>
+  <title>送给 yee 的暖心提示</title>
   <style>
     html, body {
       width: 100%;
@@ -65,6 +66,37 @@
       box-shadow: 0 8px 24px rgba(118, 131, 164, 0.22);
       backdrop-filter: blur(8px);
       pointer-events: none;
+    }
+
+    /* 手机端适配 */
+    @media (max-width: 768px) {
+      .tip-card {
+        width: 210px;
+        height: 52px;
+        font-size: 16px;
+      }
+      .hint {
+        top: 16px;
+        right: 16px;
+        font-size: 13px;
+        padding: 8px 14px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .tip-card {
+        width: 180px;
+        height: 46px;
+        font-size: 15px;
+        border-radius: 16px;
+      }
+      .hint {
+        width: calc(100% - 32px);
+        right: 16px;
+        left: 16px;
+        text-align: center;
+        top: 14px;
+      }
     }
   </style>
 </head>
@@ -174,7 +206,7 @@
       heartIndex = (heartIndex + HEART_STEP) % heartPoints.length;
 
       const jitterX = randomHelper.randint(-HEART_JITTER, HEART_JITTER);
-      const jitterY = randomHelper.randint(-HEART_JITTER, HEART_JITTER);
+      thedconst jitterY = randomHelper.randint(-HEART_JITTER, HEART_JITTER);
       const xMin = WINDOW_SIZE.width / 2;
       const xMax = window.innerWidth - WINDOW_SIZE.width / 2;
       const yMin = WINDOW_SIZE.height / 2;
