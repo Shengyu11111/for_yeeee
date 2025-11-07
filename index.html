@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="cat.ico" type="image/x-icon" />
+  <link rel="icon" href="cat.jpg" type="image/jpeg" />
+  <title>送给 yee </title>
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at 35% 25%, #fff7fb 0%, #f0f5ff 55%, #f7fbff 100%);
+      font-family: '微软雅黑', sans-serif;
+    }
+
+    #stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .tip-card {
+      position: absolute;
+      width: 250px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 18px;
+      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.12);
+      color: #4a4a4a;
+      font-size: 18px;
+      letter-spacing: 1px;
+      transform: translate(-50%, -50%) scale(0.65);
+      animation: card-in 320ms cubic-bezier(.18,.72,.44,1.42) forwards;
+      cursor: pointer;
+      user-select: none;
+      backdrop-filter: blur(6px);
+    }
+
+    .tip-card.closing {
+      animation: card-out 200ms ease forwards;
+    }
+
+    @keyframes card-in {
+      to { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    @keyframes card-out {
+      to { transform: translate(-50%, -50%) scale(0.75); opacity: 0; }
+    }
+
+    .hint {
+      position: absolute;
+      top: 20px;
+      right: 28px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.85);
+      color: #7683a4;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 8px 24px rgba(118, 131, 164, 0.22);
+      backdrop-filter: blur(8px);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="stage"></div>
+  <div class="hint">点击任意提示，会按出现顺序的倒序慢慢消失 ✨</div>
+
+  <script>
+    const randomHelper = window.crypto ? {
+      choice(list) {
+        const arr = new Uint32Array(1);
+        crypto.getRandomValues(arr);
+        return list[Math.floor((arr[0] / 2 ** 32) * list.length)];
+      },
+      randint(min, max) {
+        const arr = new Uint32Array(1);
+        crypto.getRandomValues(arr);
+        return min + Math.floor((arr[0] / 2 ** 32) * (max - min + 1));
+      }
+    } : {
+      choice: list => list[Math.floor(Math.random() * list.length)],
+      randint: (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
+    };
+
+    const TIPS = [
+      'yee多喝水哦', 'yee元气满满', 'yee保持好心情', 'yee梦想成真', 'yee越来越好看', 'yee按时吃饭',
+      'yee心想事成', 'yee好好爱自己', 'yee天天开心', 'yee烦恼消失', 'yee不要熬夜'
+    ];
+
+    const BG_COLORS = [
+      '#FFB6C1', '#FFC0CB', '#FF69B4', '#FF1493', '#FFB7C5', '#FFC1D6', '#FFAFCC', '#FF9AA2',
+      '#FFA6C9', '#FF8DAA', '#FFD1DC', '#FFCCD5', '#FEC8D8', '#FBB1BD', '#FFDAC6', '#FFCCC9',
+      '#FFBCBC', '#FFBABA', '#E5C1F9', '#D5B0FF', '#CDB4DB', '#B39CD0', '#D8BFD8', '#DDA0DD',
+      '#EE82EE', '#DA70D6', '#BA55D3', '#9370DB', '#E6E6FA', '#F8F8FF', '#F4D2E7', '#A6B1E1',
+      '#C7CEEA', '#B8C6FF', '#A9A1FF', '#BBD5F2', '#B2C7FF', '#B0E0E6', '#AFEEEE', '#E0FFFF',
+      '#F0F8FF', '#F0FFFF', '#BEE3F8', '#A3C4F3', '#9AD0EC', '#82CFFF', '#CAE9FF', '#AAD5E9',
+      '#B5EAD7', '#C8F7DC', '#A0E7E5', '#9EE7D8', '#98FB98', '#90EE90', '#ADFF2F', '#F5FFFA',
+      '#F0FFF0', '#E0F5D0', '#D6F5E3', '#CFEFE8', '#E5F6DF', '#FFFACD', '#FAFAD2', '#FFEFD5',
+      '#FFE4B5', '#FFDAB9', '#FFE4E1', '#FFF5BA', '#FFE5B4', '#FDFD96', '#F8ECC2', '#FFF0F5',
+      '#FFF5F8', '#FDF6F0', '#FAF4FF', '#FFCFE1', '#F9D1FF', '#EEC9F5', '#FFB3BA', '#FF9EC4',
+      '#FDEED6', '#F5DFC7', '#EED7B0', '#E6CDAF', '#FFD8BE', '#F7C5A8', '#F3B094', '#E7A380',
+      'skyblue', 'lightblue', 'royalblue', 'lightgreen', 'forestgreen', 'mediumseagreen',
+      'springgreen', 'mediumturquoise', 'lightseagreen', 'lightgray', 'silver', 'lightslategray',
+      'slategray', '#E0E4FC', '#E8EAFF', '#EBF4FA', '#F1F2F6', 'azure', 'aliceblue', 'honeydew',
+      'mintcream', 'ghostwhite', 'whitesmoke', 'seashell', 'oldlace', 'floralwhite', 'ivory'
+    ];
+
+    const WINDOW_SIZE = { width: 250, height: 60 };
+    const SHUTDOWN_DELAY_MS = 111;
+    const HEART_POINT_COUNT = 290;
+    const HEART_STEP = 5;
+    const HEART_JITTER = 4;
+
+    const stage = document.getElementById('stage');
+    let heartPoints = [];
+    let heartIndex = 0;
+    let openCards = [];
+    let scheduleTimer = null;
+    let shutdownInProgress = false;
+
+    function generateHeartPoints(count, screenW, screenH) {
+      const xs = [];
+      const ys = [];
+      for (let i = 0; i < count; i++) {
+        const t = (2 * Math.PI * i) / count;
+        const x = 16 * Math.sin(t) ** 3;
+        const y =
+          13 * Math.cos(t) -
+          5 * Math.cos(2 * t) -
+          2 * Math.cos(3 * t) -
+          Math.cos(4 * t);
+        xs.push(x);
+        ys.push(y);
+      }
+
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      const minY = Math.min(...ys);
+      const maxY = Math.max(...ys);
+
+      const heartW = maxX - minX || 1;
+      const heartH = maxY - minY || 1;
+
+      const marginX = Math.max(20, WINDOW_SIZE.width / 2);
+      const marginY = Math.max(20, WINDOW_SIZE.height / 2);
+      const usableW = Math.max(1, screenW - marginX * 2);
+      const usableH = Math.max(1, screenH - marginY * 2);
+
+      const scale = Math.min(usableW / heartW, usableH / heartH);
+
+      const points = [];
+      for (let i = 0; i < count; i++) {
+        const x = xs[i];
+        const y = ys[i];
+        const mappedX = (x - minX) * scale + marginX;
+        const mappedY = (maxY - y) * scale + marginY;
+        points.push({ x: mappedX, y: mappedY });
+      }
+      return points;
+    }
+
+    function getNextHeartPosition() {
+      if (!heartPoints.length) {
+        return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+      }
+      const point = heartPoints[heartIndex];
+      heartIndex = (heartIndex + HEART_STEP) % heartPoints.length;
+
+      const jitterX = randomHelper.randint(-HEART_JITTER, HEART_JITTER);
+      const jitterY = randomHelper.randint(-HEART_JITTER, HEART_JITTER);
+      const xMin = WINDOW_SIZE.width / 2;
+      const xMax = window.innerWidth - WINDOW_SIZE.width / 2;
+      const yMin = WINDOW_SIZE.height / 2;
+      const yMax = window.innerHeight - WINDOW_SIZE.height / 2;
+
+      const x = Math.min(xMax, Math.max(xMin, point.x + jitterX));
+      const y = Math.min(yMax, Math.max(yMin, point.y + jitterY));
+
+      return { x, y };
+    }
+
+    function createTipCard() {
+      const card = document.createElement('div');
+      card.className = 'tip-card';
+      card.textContent = randomHelper.choice(TIPS);
+      card.style.background = randomHelper.choice(BG_COLORS);
+
+      const { x, y } = getNextHeartPosition();
+      card.style.left = `${x}px`;
+      card.style.top = `${y}px`;
+
+      card.addEventListener('click', () => handleManualClose(card));
+
+      stage.appendChild(card);
+      openCards.push(card);
+    }
+
+    function scheduleTips(intervalMs) {
+      if (shutdownInProgress) return;
+
+      createTipCard();
+      scheduleTimer = setTimeout(() => scheduleTips(intervalMs), intervalMs);
+    }
+
+    function handleManualClose(triggerCard) {
+      if (shutdownInProgress) {
+        closeCard(triggerCard);
+        return;
+      }
+
+      shutdownInProgress = true;
+
+      if (scheduleTimer) {
+        clearTimeout(scheduleTimer);
+        scheduleTimer = null;
+      }
+
+      const remaining = openCards.filter(card => card !== triggerCard);
+      closeCard(triggerCard);
+      remaining.reverse();
+      sequentialShutdown(remaining, SHUTDOWN_DELAY_MS);
+    }
+
+    function closeCard(card) {
+      if (!card || !card.isConnected) return;
+      card.classList.add('closing');
+      openCards = openCards.filter(c => c !== card);
+      setTimeout(() => card.remove(), 200);
+    }
+
+    function sequentialShutdown(cards, delay) {
+      cards.forEach((card, idx) => {
+        setTimeout(() => closeCard(card), delay * (idx + 1));
+      });
+    }
+
+    function init() {
+      heartPoints = generateHeartPoints(
+        HEART_POINT_COUNT,
+        window.innerWidth,
+        window.innerHeight
+      );
+      scheduleTips(80);
+    }
+
+    window.addEventListener('resize', () => {
+      heartPoints = generateHeartPoints(
+        HEART_POINT_COUNT,
+        window.innerWidth,
+        window.innerHeight
+      );
+    });
+
+    init();
+  </script>
+</body>
+</html>
